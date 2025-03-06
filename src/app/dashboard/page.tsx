@@ -20,6 +20,7 @@ import {
   Pencil,
   Trash2,
   PlusCircle,
+  MoreHorizontal,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -242,7 +243,7 @@ export default function Dashboard() {
                         variant="ghost"
                         className="h-8 w-8 p-0"
                       >
-                        {/* <MoreHorizontal /> */}
+                        <MoreHorizontal />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
