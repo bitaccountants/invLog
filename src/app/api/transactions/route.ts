@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectToDB } from "@/lib/db";
 import { Transaction } from "@/models/transaction.model";
-import { auth } from "@clerk/nextjs";
+import { getAuth } from "@clerk/nextjs/server";
 
 // ✅ **Fetch All Transactions (GET)**
 export async function GET(req: Request) {
   try {
     await connectToDB();
-    const { userId } = auth(); // Clerk User ID
+    const { userId } = getAuth(req);
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -31,7 +31,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     await connectToDB();
-    const { userId } = auth();
+    const { userId } = getAuth(req); // ✅ Correct way to get user ID
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -44,10 +45,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const newTransaction = await Transaction.create({
-      ...body,
-      userId,
-    });
+    const newTransaction = await Transaction.create({ ...body, userId });
 
     return NextResponse.json(newTransaction, { status: 201 });
   } catch (error) {
@@ -63,7 +61,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     await connectToDB();
-    const { userId } = auth();
+    const { userId } = getAuth(req);
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -78,7 +76,7 @@ export async function PATCH(req: Request) {
     }
 
     const updatedTransaction = await Transaction.findOneAndUpdate(
-      { _id: id, userId }, // Only allow updates if user owns the transaction
+      { _id: id, userId }, // Ensure only updating user's transactions
       { name, type, amount, date, remarks },
       { new: true }
     );
@@ -104,7 +102,7 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   try {
     await connectToDB();
-    const { userId } = auth();
+    const { userId } = getAuth(req);
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -113,7 +111,7 @@ export async function DELETE(req: Request) {
     const { id, ids } = await req.json();
 
     if (id) {
-      // Single Transaction Delete
+      // ✅ Single Transaction Delete
       const deletedTransaction = await Transaction.findOneAndDelete({
         _id: id,
         userId,
@@ -131,7 +129,7 @@ export async function DELETE(req: Request) {
         { status: 200 }
       );
     } else if (ids && Array.isArray(ids) && ids.length > 0) {
-      // Bulk Delete
+      // ✅ Bulk Delete
       const result = await Transaction.deleteMany({
         _id: { $in: ids },
         userId,
