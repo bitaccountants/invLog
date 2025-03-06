@@ -18,8 +18,8 @@ export const connectToDB = async () => {
     cached.promise = mongoose
       .connect(MONGODB_URI, {
         dbName: "paylog",
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+        // useNewUrlParser: true,
+        // useUnifiedTopology: true,
       })
       .then((mongoose) => {
         console.log("✅ MongoDB Connected Successfully!");
