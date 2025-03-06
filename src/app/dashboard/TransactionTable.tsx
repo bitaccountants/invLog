@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DeleteConfirmation } from "@/components/ui/DeleteConfirmation"; // Importing our new component
+import { DeleteConfirmation } from "@/components/ui/DeleteConfirmation";
+import { AlertMessage } from "@/components/ui/AlertMessage";
 
 const transactions = [
   {
@@ -51,32 +52,77 @@ const transactions = [
 export const TransactionTable = () => {
   const [data, setData] = useState(transactions);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [alert, setAlert] = useState<{
+    type: "success" | "warning" | "error" | null;
+    message: string;
+  } | null>(null);
 
-  // Delete Transaction
   const handleDelete = (id: string) => {
     setData(data.filter((transaction) => transaction.id !== id));
+    setAlert({ type: "success", message: "Transaction deleted successfully!" });
   };
 
-  // Bulk Delete
   const handleBulkDelete = () => {
+    if (selectedRows.length === 0) {
+      setAlert({
+        type: "warning",
+        message: "No transactions selected for deletion.",
+      });
+      return;
+    }
+
+    if (selectedRows.length >= 3) {
+      setAlert({
+        type: "warning",
+        message:
+          "You are deleting multiple records. This action is irreversible.",
+      });
+    }
+
     setData(
       data.filter((transaction) => !selectedRows.includes(transaction.id))
     );
     setSelectedRows([]);
+    setAlert({
+      type: "success",
+      message: "Selected transactions deleted successfully!",
+    });
   };
 
   return (
     <div className="bg-card p-6 border border-secondary rounded-lg shadow-md">
+      {/* Show Alerts */}
+      {alert && (
+        <AlertMessage
+          type={alert.type!}
+          title={
+            alert.type === "error"
+              ? "Error"
+              : alert.type === "warning"
+              ? "Warning"
+              : "Success"
+          }
+          description={alert.message}
+        />
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Recent Transactions</h2>
 
-        {/* Bulk Delete Button with Confirmation */}
         <DeleteConfirmation
           triggerText="Delete Selected"
           title="Delete Selected Transactions"
-          description="This action cannot be undone. Are you sure you want to delete these transactions?"
+          description="You are about to delete multiple records. This action is irreversible. Are you sure?"
           onConfirm={handleBulkDelete}
-        />
+        >
+          <Button
+            variant="destructive"
+            disabled={selectedRows.length === 0} // Disable button when no transactions are selected
+          >
+            <Trash2 className="size-4 mr-2" />
+            Delete Selected
+          </Button>
+        </DeleteConfirmation>
       </div>
 
       <Table>
@@ -96,7 +142,7 @@ export const TransactionTable = () => {
             </TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead className="text-right">Amount (PKR)</TableHead>
+            <TableHead>Amount (PKR)</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Message</TableHead>
             <TableHead>Actions</TableHead>
@@ -123,7 +169,7 @@ export const TransactionTable = () => {
               >
                 {transaction.type}
               </TableCell>
-              <TableCell className="text-right font-medium">
+              <TableCell>
                 PKR {new Intl.NumberFormat("en-PK").format(transaction.amount)}
               </TableCell>
               <TableCell>
@@ -133,9 +179,7 @@ export const TransactionTable = () => {
                   year: "numeric",
                 })}
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {transaction.remarks}
-              </TableCell>
+              <TableCell>{transaction.remarks}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -157,12 +201,10 @@ export const TransactionTable = () => {
                       Generate Invoice
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-
-                    {/* Delete Transaction with Confirmation */}
                     <DeleteConfirmation
                       triggerText="Delete Transaction"
                       title="Delete Transaction"
-                      description="Are you sure you want to delete this transaction? This action cannot be undone."
+                      description="Are you sure?"
                       onConfirm={() => handleDelete(transaction.id)}
                     />
                   </DropdownMenuContent>
