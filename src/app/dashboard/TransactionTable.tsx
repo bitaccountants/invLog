@@ -28,6 +28,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DeleteConfirmation } from "@/components/ui/DeleteConfirmation";
 import { AlertMessage } from "@/components/ui/AlertMessage";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner"; // Toast notifications
 
 export const TransactionTable = () => {
   const [data, setData] = useState([]); // Store transactions
@@ -39,7 +59,11 @@ export const TransactionTable = () => {
     message: string;
   } | null>(null);
 
-  // ✅ **Fetch Transactions**
+  // State for editing
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState<any>(null);
+
+  // ✅ Fetch Transactions
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -61,7 +85,7 @@ export const TransactionTable = () => {
     fetchTransactions();
   }, []);
 
-  // ✅ **Handle Delete Transaction**
+  // ✅ Handle Delete Transaction
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch("/api/transactions", {
@@ -86,39 +110,58 @@ export const TransactionTable = () => {
     }
   };
 
-  // ✅ **Handle Bulk Delete**
-  const handleBulkDelete = async () => {
-    if (selectedRows.length === 0) {
-      setAlert({
-        type: "warning",
-        message: "No transactions selected for deletion.",
-      });
+  // ✅ Handle Edit Transaction
+  const handleEditClick = (transaction: any) => {
+    setCurrentTransaction(transaction);
+    setEditDialogOpen(true);
+  };
+
+  // ✅ Handle Update Transaction
+  const handleUpdate = async () => {
+    if (!currentTransaction?._id) {
+      toast.error("❌ Transaction ID is missing!");
+      console.error("🚨 Missing _id in transaction:", currentTransaction);
       return;
     }
 
+    // ✅ Ensure correct data format for PATCH request
+    const updatedTransactionData = {
+      id: currentTransaction._id, // 👈 Ensure ID is included properly
+      name: currentTransaction.name,
+      type: currentTransaction.type.toLowerCase(),
+      amount: Number(currentTransaction.amount),
+      date: new Date(currentTransaction.date),
+      remarks: currentTransaction.remarks || "",
+    };
+
+    console.log("📤 Sending Updated Transaction:", updatedTransactionData);
+
     try {
       const response = await fetch("/api/transactions", {
-        method: "DELETE",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ids: selectedRows }),
+        body: JSON.stringify(updatedTransactionData),
       });
+
+      const responseData = await response.json();
+      console.log("📥 Response from API:", responseData);
 
       if (!response.ok) {
-        throw new Error("Failed to delete transactions");
+        throw new Error(responseData.error || "Failed to update transaction");
       }
 
-      setData(
-        data.filter((transaction) => !selectedRows.includes(transaction._id))
+      // ✅ Update state with new transaction data
+      setData((prevData) =>
+        prevData.map((t) => (t._id === responseData._id ? responseData : t))
       );
-      setSelectedRows([]);
-      setAlert({
-        type: "success",
-        message: "Selected transactions deleted successfully!",
-      });
+
+      toast.success("✅ Transaction updated successfully!");
+      setEditDialogOpen(false);
     } catch (error) {
-      setAlert({ type: "error", message: "Failed to delete transactions." });
+      console.error("❌ Failed to update transaction:", error);
+      toast.error(`❌ Error: ${error.message}`);
     }
   };
 
@@ -141,134 +184,124 @@ export const TransactionTable = () => {
 
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Recent Transactions</h2>
-
-        <DeleteConfirmation
-          triggerText="Delete Selected"
-          title="Delete Selected Transactions"
-          description="You are about to delete multiple records. This action is irreversible. Are you sure?"
-          onConfirm={handleBulkDelete}
-        >
-          <Button
-            variant="destructive"
-            disabled={selectedRows.length === 0}
-          >
-            <Trash2 className="size-4 mr-2" />
-            Delete Selected
-          </Button>
-        </DeleteConfirmation>
       </div>
 
-      {/* ✅ **Loading State** */}
-      {loading && (
-        <div className="flex justify-center items-center py-10">
-          <Loader2 className="size-6 animate-spin" />
-        </div>
-      )}
-
-      {/* ✅ **Error State** */}
-      {error && (
-        <p className="text-red-500 text-center font-medium py-4">{error}</p>
-      )}
-
-      {/* ✅ **Table Data** */}
-      {!loading && !error && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Checkbox
-                  checked={
-                    selectedRows.length === data.length && data.length > 0
-                  }
-                  onCheckedChange={() =>
-                    setSelectedRows(
-                      selectedRows.length === data.length
-                        ? []
-                        : data.map((t) => t._id)
-                    )
-                  }
-                />
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Amount (PKR)</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Remarks</TableHead>
-              <TableHead>Actions</TableHead>
+      {/* Table Data */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Amount (PKR)</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Remarks</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((transaction) => (
+            <TableRow key={transaction._id}>
+              <TableCell>{transaction.name}</TableCell>
+              <TableCell
+                className={
+                  transaction.type === "credit"
+                    ? "text-green-500"
+                    : "text-red-500"
+                }
+              >
+                {transaction.type}
+              </TableCell>
+              <TableCell>
+                PKR {new Intl.NumberFormat("en-PK").format(transaction.amount)}
+              </TableCell>
+              <TableCell>
+                {new Date(transaction.date).toLocaleDateString("en-GB")}
+              </TableCell>
+              <TableCell>{transaction.remarks}</TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                    >
+                      <MoreHorizontal />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      onClick={() => handleEditClick(transaction)}
+                    >
+                      <Pencil className="size-4 mr-2" /> Edit Transaction
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <FileText className="size-4 mr-2 text-primary" /> Generate
+                      Invoice
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DeleteConfirmation
+                      triggerText="Delete Transaction"
+                      title="Delete Transaction"
+                      description="Are you sure?"
+                      onConfirm={() => handleDelete(transaction._id)}
+                    />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((transaction) => (
-              <TableRow key={transaction._id}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedRows.includes(transaction._id)}
-                    onCheckedChange={() =>
-                      setSelectedRows((prev) =>
-                        prev.includes(transaction._id)
-                          ? prev.filter((id) => id !== transaction._id)
-                          : [...prev, transaction._id]
-                      )
-                    }
-                  />
-                </TableCell>
-                <TableCell>{transaction.name}</TableCell>
-                <TableCell
-                  className={`${
-                    transaction.type === "credit"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  } font-semibold`}
-                >
-                  {transaction.type}
-                </TableCell>
-                <TableCell>
-                  PKR{" "}
-                  {new Intl.NumberFormat("en-PK").format(transaction.amount)}
-                </TableCell>
-                <TableCell>
-                  {new Date(transaction.date).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </TableCell>
-                <TableCell>{transaction.remarks}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                      >
-                        <MoreHorizontal />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <Pencil className="size-4 mr-2" />
-                        Edit Transaction
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <FileText className="size-4 mr-2 text-primary" />
-                        Generate Invoice
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DeleteConfirmation
-                        triggerText="Delete Transaction"
-                        title="Delete Transaction"
-                        description="Are you sure?"
-                        onConfirm={() => handleDelete(transaction._id)}
-                      />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* Edit Transaction Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+          </DialogHeader>
+          <Label>Name</Label>
+          <Input
+            name="name"
+            value={currentTransaction?.name}
+            onChange={(e) =>
+              setCurrentTransaction({
+                ...currentTransaction,
+                name: e.target.value,
+              })
+            }
+          />
+          <Label>Amount</Label>
+          <Input
+            name="amount"
+            type="number"
+            value={currentTransaction?.amount}
+            onChange={(e) =>
+              setCurrentTransaction({
+                ...currentTransaction,
+                amount: e.target.value,
+              })
+            }
+          />
+          <Label>Remarks</Label>
+          <Textarea
+            name="remarks"
+            value={currentTransaction?.remarks}
+            onChange={(e) =>
+              setCurrentTransaction({
+                ...currentTransaction,
+                remarks: e.target.value,
+              })
+            }
+          />
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Apply Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
