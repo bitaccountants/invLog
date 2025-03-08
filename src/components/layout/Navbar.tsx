@@ -1,18 +1,11 @@
 "use client";
-
 import { Menu, ChevronsDown, Sun, Moon, Github } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs"; // Clerk Authentication Components
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,18 +18,11 @@ export const Navbar = () => {
         href="/"
         className="font-bold text-lg flex items-center"
       >
-        <ChevronsDown className="bg-gradient-to-tr from-primary to-primary/70 border-secondary rounded-lg w-9 h-9 mr-2 border text-white" />
         PayLog
       </Link>
 
       {/* Desktop Navigation */}
-      <nav className="hidden lg:flex items-center gap-6">
-        <Link
-          href="/"
-          className="text-lg font-medium hover:text-primary transition"
-        >
-          Home
-        </Link>
+      <nav className="hidden lg:flex items-center gap-3">
         <Link
           href="/dashboard"
           className="text-lg font-medium hover:text-primary transition"
@@ -51,7 +37,7 @@ export const Navbar = () => {
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
           {theme === "dark" ? (
-            <Sun className="w-5 h-5" />
+            <Sun className="w-4 h-5" />
           ) : (
             <Moon className="w-5 h-5" />
           )}
@@ -64,7 +50,7 @@ export const Navbar = () => {
           asChild
         >
           <Link
-            href="https://github.com/your-repo"
+            href="https://github.com/ZeeshanMukhtar1/PayLog"
             target="_blank"
           >
             <Github className="w-5 h-5" />
@@ -106,13 +92,6 @@ export const Navbar = () => {
             className="flex flex-col justify-between rounded-tr-2xl rounded-br-2xl bg-card border-secondary"
           >
             <div className="flex flex-col gap-4 p-4">
-              <Link
-                href="/"
-                className="text-lg font-semibold"
-                onClick={() => setIsOpen(false)}
-              >
-                Home
-              </Link>
               <Link
                 href="/dashboard"
                 className="text-lg font-semibold"

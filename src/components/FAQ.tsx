@@ -47,7 +47,7 @@ export const FAQSection = () => {
   return (
     <section
       id="faq"
-      className="container py-24 sm:py-32 flex justify-center"
+      className="container py-24 sm:py-10 flex justify-center"
     >
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
@@ -60,7 +60,6 @@ export const FAQSection = () => {
           </h2>
         </div>
 
-        {/* Centering Accordion */}
         <div className="w-full">
           <Accordion
             type="single"

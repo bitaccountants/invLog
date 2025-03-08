@@ -1,12 +1,12 @@
 import { Separator } from "@/components/ui/separator";
-import { ChevronsDownIcon, Github, Twitter, Instagram } from "lucide-react";
+import { Github, Instagram, Linkedin } from "lucide-react";
 import Link from "next/link";
 
 export const Footer = () => {
   return (
     <footer
       id="footer"
-      className="container py-24 sm:py-32"
+      className="container py-24 sm:py-10"
     >
       <div className="p-10 bg-card border border-secondary rounded-2xl">
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-x-12 gap-y-8">
@@ -16,7 +16,6 @@ export const Footer = () => {
               href="/"
               className="flex font-bold items-center"
             >
-              <ChevronsDownIcon className="w-9 h-9 mr-2 bg-gradient-to-tr from-primary via-primary/70 to-primary rounded-lg border border-secondary" />
               <h3 className="text-2xl">PayLog</h3>
             </Link>
           </div>
@@ -56,18 +55,18 @@ export const Footer = () => {
               </Link>
             </div>
             <div className="flex items-center gap-2">
-              <Twitter className="w-5 h-5 opacity-60" />
+              <Linkedin className="w-5 h-5 opacity-60" />
               <Link
-                href="#"
+                href="https://www.linkedin.com/in/zeeshanmukhtar1/"
                 className="opacity-60 hover:opacity-100"
               >
-                Twitter
+                LinkedIn
               </Link>
             </div>
             <div className="flex items-center gap-2">
               <Instagram className="w-5 h-5 opacity-60" />
               <Link
-                href="#"
+                href="https://www.instagram.com/zeshanmukhtar01/"
                 className="opacity-60 hover:opacity-100"
               >
                 Instagram
@@ -75,12 +74,11 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Help */}
           <div className="flex flex-col gap-2">
             <h3 className="font-bold text-lg">Help</h3>
             <div>
               <Link
-                href="#"
+                href="https://codewithzeeshan.me/"
                 className="opacity-60 hover:opacity-100"
               >
                 Contact Us
@@ -88,15 +86,7 @@ export const Footer = () => {
             </div>
             <div>
               <Link
-                href="#"
-                className="opacity-60 hover:opacity-100"
-              >
-                FAQ
-              </Link>
-            </div>
-            <div>
-              <Link
-                href="#"
+                href="mailto:zeeshanwebdev7@gmail.com?subject=Feedback%20for%20PayLog&body=Hello,%0D%0A%0D%0AI have some feedback regarding PayLog:%0D%0A%0D%0A"
                 className="opacity-60 hover:opacity-100"
               >
                 Feedback

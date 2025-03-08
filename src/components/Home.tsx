@@ -1,17 +1,13 @@
 "use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-// import { useTheme } from "next-themes";
 import Link from "next/link";
 
 export default function Home() {
-  // const { theme } = useTheme();
-
   return (
     <section className="container w-full">
-      <div className="grid place-items-center lg:max-w-screen-xl gap-8 mx-auto py-20 md:py-32">
+      <div className="grid place-items-center lg:max-w-screen-xl gap-8 mx-auto py-20 md:py-20">
         {/* Header Section */}
         <div className="text-center space-y-8">
           <Badge
@@ -35,14 +31,14 @@ export default function Home() {
           </div>
 
           <p className="max-w-screen-sm mx-auto text-xl text-muted-foreground">
-            Track your debts, manage balances, and generate invoices seamlessly
-            with PayLog.
+            Track your debts, manage balances, and generate invoices
+            effortlessly with PayLog.
           </p>
 
           {/* Buttons */}
-          <div className="space-y-4 md:space-y-0 md:space-x-4">
+          <div className="space-y-4 md:space-y-0 md:space-x-4 pointer">
             <Link href="/dashboard">
-              <Button className="w-5/6 md:w-1/4 font-bold group/arrow">
+              <Button className="w-5/6 md:w-1/4 font-bold group/arrow ">
                 Get Started
                 <ArrowRight className="size-5 ml-2 group-hover/arrow:translate-x-1 transition-transform" />
               </Button>
@@ -54,7 +50,7 @@ export default function Home() {
               className="w-5/6 md:w-1/4 font-bold"
             >
               <Link
-                href="https://github.com/your-repo"
+                href="https://github.com/ZeeshanMukhtar1/PayLog"
                 target="_blank"
               >
                 GitHub Repository

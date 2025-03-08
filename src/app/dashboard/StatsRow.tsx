@@ -5,20 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUp, ArrowDown, FileText } from "lucide-react";
 
 export const StatsRow = () => {
-  const [transactions, setTransactions] = useState([]); // ✅ Store transactions
+  interface Transaction {
+    type: "credit" | "debit";
+    amount: number;
+  }
+
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Fetch all transactions again
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await fetch("/api/transactions"); // Assuming API returns user's transactions
+        const response = await fetch("/api/transactions");
         if (!response.ok) {
           throw new Error("Failed to fetch transactions");
         }
         const data = await response.json();
         setTransactions(data);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setError("Error fetching transactions.");
       } finally {
@@ -29,19 +34,16 @@ export const StatsRow = () => {
     fetchTransactions();
   }, []);
 
-  // ✅ Calculate total balance (Credits - Debits)
   const totalBalance = transactions.reduce((acc, transaction) => {
     return transaction.type === "credit"
       ? acc + transaction.amount
       : acc - transaction.amount;
   }, 0);
 
-  // ✅ Calculate "What Others Owe Me" (Total of Credit Transactions)
   const whatOthersOweMe = transactions
     .filter((transaction) => transaction.type === "credit")
     .reduce((sum, transaction) => sum + transaction.amount, 0);
 
-  // ✅ Calculate "What I Owe" (Total of Debit Transactions)
   const whatIOwe = transactions
     .filter((transaction) => transaction.type === "debit")
     .reduce((sum, transaction) => sum + transaction.amount, 0);
@@ -71,20 +73,24 @@ export const StatsRow = () => {
   ];
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      {error && <p className="text-red-500">{error}</p>}
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 px-4 md:px-8">
+      {error && (
+        <p className="text-red-500 text-center col-span-full">{error}</p>
+      )}
 
       {stats.map((stat, index) => (
         <Card
           key={index}
-          className="shadow-md border border-secondary transition-all hover:scale-[1.02] p-4"
+          className="shadow-lg border border-border rounded-2xl transition-all hover:scale-[1.02] p-6 bg-card text-foreground"
         >
-          <CardHeader className="flex justify-between items-center">
-            <CardTitle className="text-md">{stat.title}</CardTitle>
-            <div className="p-2 rounded-full bg-primary/10">{stat.icon}</div>
+          <CardHeader className="flex justify-between items-center pb-3">
+            <CardTitle className="text-lg font-medium">{stat.title}</CardTitle>
+            <div className="p-3 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+              {stat.icon}
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{stat.value}</p>
+            <p className="text-3xl font-bold">{stat.value}</p>
           </CardContent>
         </Card>
       ))}
