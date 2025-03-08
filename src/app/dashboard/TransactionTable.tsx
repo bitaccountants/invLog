@@ -10,14 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pencil,
-  Trash2,
-  FileText,
-  MoreHorizontal,
-  Loader2,
-} from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Pencil, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +23,6 @@ import { DeleteConfirmation } from "@/components/ui/DeleteConfirmation";
 import { AlertMessage } from "@/components/ui/AlertMessage";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -47,12 +39,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner"; // Toast notifications
+import { toast } from "sonner";
 
 export const TransactionTable = () => {
-  const [data, setData] = useState([]); // Store transactions
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [alert, setAlert] = useState<{
     type: "success" | "warning" | "error" | null;
@@ -63,7 +55,7 @@ export const TransactionTable = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [currentTransaction, setCurrentTransaction] = useState<any>(null);
 
-  // ✅ Fetch Transactions
+  // Fetch Transactions
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -85,7 +77,7 @@ export const TransactionTable = () => {
     fetchTransactions();
   }, []);
 
-  // ✅ Handle Delete Transaction
+  // Handle Delete Transaction
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch("/api/transactions", {
@@ -110,31 +102,27 @@ export const TransactionTable = () => {
     }
   };
 
-  // ✅ Handle Edit Transaction
+  // Handle Edit Transaction
   const handleEditClick = (transaction: any) => {
     setCurrentTransaction(transaction);
     setEditDialogOpen(true);
   };
 
-  // ✅ Handle Update Transaction
+  // Handle Update Transaction
   const handleUpdate = async () => {
     if (!currentTransaction?._id) {
       toast.error("❌ Transaction ID is missing!");
-      console.error("🚨 Missing _id in transaction:", currentTransaction);
       return;
     }
 
-    // ✅ Ensure correct data format for PATCH request
     const updatedTransactionData = {
-      id: currentTransaction._id, // 👈 Ensure ID is included properly
+      id: currentTransaction._id,
       name: currentTransaction.name,
       type: currentTransaction.type.toLowerCase(),
       amount: Number(currentTransaction.amount),
       date: new Date(currentTransaction.date),
       remarks: currentTransaction.remarks || "",
     };
-
-    console.log("📤 Sending Updated Transaction:", updatedTransactionData);
 
     try {
       const response = await fetch("/api/transactions", {
@@ -146,13 +134,11 @@ export const TransactionTable = () => {
       });
 
       const responseData = await response.json();
-      console.log("📥 Response from API:", responseData);
 
       if (!response.ok) {
         throw new Error(responseData.error || "Failed to update transaction");
       }
 
-      // ✅ Update state with new transaction data
       setData((prevData) =>
         prevData.map((t) => (t._id === responseData._id ? responseData : t))
       );
@@ -160,7 +146,6 @@ export const TransactionTable = () => {
       toast.success("✅ Transaction updated successfully!");
       setEditDialogOpen(false);
     } catch (error) {
-      console.error("❌ Failed to update transaction:", error);
       toast.error(`❌ Error: ${error.message}`);
     }
   };
@@ -263,6 +248,7 @@ export const TransactionTable = () => {
           <DialogHeader>
             <DialogTitle>Edit Transaction</DialogTitle>
           </DialogHeader>
+
           <Label>Name</Label>
           <Input
             name="name"
@@ -274,6 +260,7 @@ export const TransactionTable = () => {
               })
             }
           />
+
           <Label>Amount</Label>
           <Input
             name="amount"
@@ -286,6 +273,25 @@ export const TransactionTable = () => {
               })
             }
           />
+
+          <Label>Transaction Type</Label>
+          <Select
+            value={currentTransaction?.type}
+            onValueChange={(value) =>
+              setCurrentTransaction({ ...currentTransaction, type: value })
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Transaction Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="credit">Credit</SelectItem>
+                <SelectItem value="debit">Debit</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
           <Label>Remarks</Label>
           <Textarea
             name="remarks"
@@ -297,6 +303,7 @@ export const TransactionTable = () => {
               })
             }
           />
+
           <DialogFooter>
             <Button onClick={handleUpdate}>Apply Changes</Button>
           </DialogFooter>
