@@ -70,23 +70,25 @@ export const TransactionButtons = () => {
       } else {
         toast.error(data.error || "Failed to add transaction.");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Something went wrong. Try again!");
     }
   };
 
   return (
-    <div className="flex flex-wrap justify-center gap-4 mb-8">
-      {/* Credit Button */}
+    <div className="flex justify-center mb-8">
+      {/* Single Button for Adding Transaction */}
       <Dialog
         open={open}
         onOpenChange={setOpen}
       >
         <DialogTrigger asChild>
-          <Button className="flex items-center gap-2 w-40">
-            <PlusCircle className="size-5 text-green-500" />
-            Credit
+          <Button
+            variant={"outline"}
+            className="flex items-center gap-2 px-6 py-3 text-lg font-semibold"
+          >
+            <PlusCircle className="size-6" />
+            Add Transaction
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">
@@ -156,22 +158,6 @@ export const TransactionButtons = () => {
             <Button onClick={handleSave}>Save Transaction</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-
-      {/* Debit Button (Also Opens the Dialog) */}
-      <Dialog
-        open={open}
-        onOpenChange={setOpen}
-      >
-        <DialogTrigger asChild>
-          <Button
-            className="flex items-center gap-2 w-40"
-            variant="secondary"
-          >
-            <PlusCircle className="size-5 text-red-500" />
-            Debit
-          </Button>
-        </DialogTrigger>
       </Dialog>
     </div>
   );
