@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -22,10 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner"; // Import toast for notifications
+import { toast } from "sonner";
 
 export const TransactionButtons = () => {
-  const [open, setOpen] = useState(false); // Dialog open state
+  const [open, setOpen] = useState(false);
   const [transaction, setTransaction] = useState({
     name: "",
     amount: "",
@@ -55,9 +60,7 @@ export const TransactionButtons = () => {
     try {
       const response = await fetch("/api/transactions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(transaction),
       });
 
@@ -70,28 +73,39 @@ export const TransactionButtons = () => {
       } else {
         toast.error(data.error || "Failed to add transaction.");
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Something went wrong. Try again!");
     }
   };
 
   return (
-    <div className="flex justify-center mb-8">
-      {/* Single Button for Adding Transaction */}
+    <>
+      {/* Floating Button */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={() => setOpen(true)}
+              className="fixed bottom-6 right-6 bg-background border border-border text-foreground size-14 rounded-full shadow-md transition-all hover:scale-105 hover:bg-background hover:border-border focus:ring-2 focus:ring-muted z-50 flex items-center justify-center"
+            >
+              <Plus className="size-6" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="left"
+            className="bg-background border border-border text-foreground px-3 py-2 rounded-md text-sm shadow-md"
+          >
+            Add Transaction
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Transaction Modal */}
       <Dialog
         open={open}
         onOpenChange={setOpen}
       >
-        <DialogTrigger asChild>
-          <Button
-            variant={"outline"}
-            className=" mt-6 flex items-center gap-2 px-6 py-3 text-lg font-semibold"
-          >
-            <PlusCircle className="size-6" />
-            Add Transaction
-          </Button>
-        </DialogTrigger>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add Transaction</DialogTitle>
@@ -175,6 +189,6 @@ export const TransactionButtons = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
