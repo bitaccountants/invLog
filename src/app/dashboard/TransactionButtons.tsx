@@ -70,6 +70,7 @@ export const TransactionButtons = () => {
       } else {
         toast.error(data.error || "Failed to add transaction.");
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Something went wrong. Try again!");
     }
@@ -85,7 +86,7 @@ export const TransactionButtons = () => {
         <DialogTrigger asChild>
           <Button
             variant={"outline"}
-            className="flex items-center gap-2 px-6 py-3 text-lg font-semibold"
+            className=" mt-6 flex items-center gap-2 px-6 py-3 text-lg font-semibold"
           >
             <PlusCircle className="size-6" />
             Add Transaction

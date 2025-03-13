@@ -73,29 +73,42 @@ export const StatsRow = () => {
   ];
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 px-4 md:px-8">
-      {error && (
-        <p className="text-red-500 text-center col-span-full">{error}</p>
-      )}
+    <div className="px-4 md:px-8 space-y-6">
+      {/* Page Title & Subtitle */}
+      <div className="text-center">
+        <h1 className="mt-[-20] text-3xl font-semibold">Financial Overview</h1>
+        <p className="text-muted-foreground">
+          Get insights into your account balance, receivables, and payables.
+        </p>
+      </div>
 
-      {stats.map((stat, index) => (
-        <Card
-          key={index}
-          className="shadow-lg border border-border rounded-2xl transition-all hover:scale-[1.02] p-6 bg-card text-foreground"
-        >
-          <CardHeader className="flex justify-between items-center pb-2">
-            <CardTitle className="text-lg font-medium">{stat.title}</CardTitle>
-            <div className="p-3 mt-4 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
-              {stat.icon}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className=" text-muted-foreground text-3xl font-bold">
-              {stat.value}
-            </p>
-          </CardContent>
-        </Card>
-      ))}
+      {/* Stats Cards */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {error && (
+          <p className="text-red-500 text-center col-span-full">{error}</p>
+        )}
+
+        {stats.map((stat, index) => (
+          <Card
+            key={index}
+            className="shadow-lg border border-border rounded-2xl transition-all hover:scale-[1.02] p-6 bg-card text-foreground"
+          >
+            <CardHeader className="flex justify-between items-center pb-2">
+              <CardTitle className="text-lg font-medium">
+                {stat.title}
+              </CardTitle>
+              <div className="p-3 mt-4 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                {stat.icon}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-3xl font-bold">
+                {stat.value}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
