@@ -1,8 +1,8 @@
 "use client";
-import { Menu, ChevronsDown, Sun, Moon, Github } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, Sun, Moon, Github } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
@@ -10,9 +10,35 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Track scroll direction to show/hide navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down & passed 50px, hide navbar
+        setIsVisible(false);
+      } else {
+        // Scrolling up, show navbar
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   return (
-    <header className="shadow-md bg-opacity-15 w-[90%] md:w-[80%] lg:w-[75%] lg:max-w-screen-xl top-5 mx-auto sticky border border-secondary z-40 rounded-2xl flex justify-between items-center p-4 bg-card">
+    <header
+      className={`shadow-md bg-opacity-15 w-[90%] md:w-[80%] lg:w-[75%] lg:max-w-screen-xl top-5 mx-auto sticky border border-secondary z-40 rounded-2xl flex justify-between items-center p-4 bg-card transition-transform duration-300 ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       {/* Logo */}
       <Link
         href="/"
