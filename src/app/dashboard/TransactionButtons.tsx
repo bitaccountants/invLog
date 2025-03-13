@@ -99,7 +99,12 @@ export const TransactionButtons = () => {
           <div className="grid gap-4">
             {/* Name */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="name">Transaction Name</Label>
+              <Label
+                className="text-muted-foreground"
+                htmlFor="name"
+              >
+                Transaction Name
+              </Label>
               <Input
                 id="name"
                 name="name"
@@ -111,7 +116,12 @@ export const TransactionButtons = () => {
 
             {/* Amount */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">Amount (PKR)</Label>
+              <Label
+                className="text-muted-foreground"
+                htmlFor="amount"
+              >
+                Amount
+              </Label>
               <Input
                 id="amount"
                 name="amount"
@@ -124,7 +134,7 @@ export const TransactionButtons = () => {
 
             {/* Type Selection */}
             <div className="flex flex-col gap-2">
-              <Label>Transaction Type</Label>
+              <Label className="text-muted-foreground">Transaction Type</Label>
               <Select
                 value={transaction.type}
                 onValueChange={handleTypeChange}
@@ -143,7 +153,12 @@ export const TransactionButtons = () => {
 
             {/* Remarks */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="remarks">Remarks (Optional)</Label>
+              <Label
+                className="text-muted-foreground"
+                htmlFor="remarks"
+              >
+                Remarks (Optional)
+              </Label>
               <Textarea
                 id="remarks"
                 name="remarks"

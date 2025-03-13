@@ -50,21 +50,21 @@ export const StatsRow = () => {
 
   const stats = [
     {
-      title: "Total Balance",
+      title: "Net Balance",
       value: loading
         ? "Loading..."
         : `PKR ${new Intl.NumberFormat("en-PK").format(totalBalance)}`,
       icon: <FileText className="text-primary size-6" />,
     },
     {
-      title: "What Others Owe Me",
+      title: "Receivables",
       value: loading
         ? "Loading..."
         : `PKR ${new Intl.NumberFormat("en-PK").format(whatOthersOweMe)}`,
       icon: <ArrowUp className="text-green-500 size-6" />,
     },
     {
-      title: "What I Owe",
+      title: "Payables",
       value: loading
         ? "Loading..."
         : `PKR ${new Intl.NumberFormat("en-PK").format(whatIOwe)}`,
@@ -83,14 +83,16 @@ export const StatsRow = () => {
           key={index}
           className="shadow-lg border border-border rounded-2xl transition-all hover:scale-[1.02] p-6 bg-card text-foreground"
         >
-          <CardHeader className="flex justify-between items-center pb-3">
+          <CardHeader className="flex justify-between items-center pb-2">
             <CardTitle className="text-lg font-medium">{stat.title}</CardTitle>
-            <div className="p-3 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <div className="p-3 mt-4 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
               {stat.icon}
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stat.value}</p>
+            <p className=" text-muted-foreground text-3xl font-bold">
+              {stat.value}
+            </p>
           </CardContent>
         </Card>
       ))}
