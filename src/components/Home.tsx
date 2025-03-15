@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import Link, { LinkProps } from "next/link";
+import { Link } from "next-transition-router";
 
 export default function Home() {
   return (
@@ -38,7 +38,7 @@ export default function Home() {
           {/* Buttons */}
           <div className="space-y-4 md:space-y-0 md:space-x-4 pointer">
             <Link href="/dashboard">
-              <Button className="w-5/6 md:w-1/4 font-bold group/arrow ">
+              <Button className="w-5/6 md:w-1/4 font-bold group/arrow">
                 Get Started
                 <ArrowRight className="size-5 ml-2 group-hover/arrow:translate-x-1 transition-transform" />
               </Button>

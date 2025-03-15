@@ -3,7 +3,7 @@ import { Inter, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
-
+import { Providers } from "./providers";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -35,7 +35,9 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
           >
-            {children}
+            <Providers>
+              <main>{children}</main>
+            </Providers>
           </ThemeProvider>
         </body>
       </html>
