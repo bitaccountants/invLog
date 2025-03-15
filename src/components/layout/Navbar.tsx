@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import { Menu, Sun, Moon, Github } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Link } from "next-view-transitions";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

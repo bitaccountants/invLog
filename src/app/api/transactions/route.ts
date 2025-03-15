@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectToDB } from "@/lib/db";
 import { Transaction } from "@/models/transaction.model";
 import { getAuth } from "@clerk/nextjs/server";
 
 // ✅ **Fetch All Transactions (GET)**
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     await connectToDB();
     const { userId } = getAuth(req);
@@ -28,10 +28,10 @@ export async function GET(req: Request) {
 }
 
 // ✅ **Create a New Transaction (POST)**
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     await connectToDB();
-    const { userId } = getAuth(req); // ✅ Correct way to get user ID
+    const { userId } = getAuth(req);
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 }
 
 // ✅ **Edit Transaction (PATCH)**
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   try {
     await connectToDB();
     const { userId } = getAuth(req);
@@ -76,7 +76,7 @@ export async function PATCH(req: Request) {
     }
 
     const updatedTransaction = await Transaction.findOneAndUpdate(
-      { _id: id, userId }, // Ensure only updating user's transactions
+      { _id: id, userId },
       { name, type, amount, date, remarks },
       { new: true }
     );
@@ -99,7 +99,7 @@ export async function PATCH(req: Request) {
 }
 
 // ✅ **Delete Single OR Bulk Transactions (DELETE)**
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
     await connectToDB();
     const { userId } = getAuth(req);
@@ -111,7 +111,6 @@ export async function DELETE(req: Request) {
     const { id, ids } = await req.json();
 
     if (id) {
-      // ✅ Single Transaction Delete
       const deletedTransaction = await Transaction.findOneAndDelete({
         _id: id,
         userId,
@@ -129,7 +128,6 @@ export async function DELETE(req: Request) {
         { status: 200 }
       );
     } else if (ids && Array.isArray(ids) && ids.length > 0) {
-      // ✅ Bulk Delete
       const result = await Transaction.deleteMany({
         _id: { $in: ids },
         userId,

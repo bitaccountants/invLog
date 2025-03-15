@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { Link } from "next-view-transitions";
+import Link, { LinkProps } from "next/link";
 
 export default function Home() {
   return (

@@ -1,7 +1,6 @@
 import { Separator } from "@/components/ui/separator";
 import { Github, Instagram, Linkedin } from "lucide-react";
-import { Link } from "next-view-transitions";
-
+import Link from "next/link";
 export const Footer = () => {
   return (
     <footer

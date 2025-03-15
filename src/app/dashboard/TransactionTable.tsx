@@ -41,8 +41,17 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
+type Transaction = {
+  _id: string;
+  name: string;
+  type: "credit" | "debit";
+  amount: number;
+  date: string;
+  remarks?: string;
+};
+
 export const TransactionTable = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -92,7 +101,9 @@ export const TransactionTable = () => {
         throw new Error("Failed to delete transaction");
       }
 
-      setData(data.filter((transaction) => transaction._id !== id));
+      setData((prevData) =>
+        prevData.filter((transaction) => transaction._id !== id)
+      );
       setAlert({
         type: "success",
         message: "Transaction deleted successfully!",
@@ -146,7 +157,11 @@ export const TransactionTable = () => {
       toast.success("✅ Transaction updated successfully!");
       setEditDialogOpen(false);
     } catch (error) {
-      toast.error(`❌ Error: ${error.message}`);
+      if (error instanceof Error) {
+        toast.error(`❌ Error: ${error.message}`);
+      } else {
+        toast.error("❌ An unknown error occurred.");
+      }
     }
   };
 
