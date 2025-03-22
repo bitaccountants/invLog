@@ -10,15 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, FileText, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Pencil, Trash2, FileText, Loader } from "lucide-react";
 import { DeleteConfirmation } from "@/components/ui/DeleteConfirmation";
 import { AlertMessage } from "@/components/ui/AlertMessage";
 import {
@@ -53,79 +45,63 @@ type Transaction = {
 export const TransactionTable = () => {
   const [data, setData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [alert, setAlert] = useState<{
     type: "success" | "warning" | "error" | null;
     message: string;
   } | null>(null);
 
-  // State for editing
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [currentTransaction, setCurrentTransaction] = useState<any>(null);
+  const [currentTransaction, setCurrentTransaction] =
+    useState<Transaction | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Fetch Transactions
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const response = await fetch("/api/transactions");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch transactions");
-        }
-
+        if (!response.ok) throw new Error("Failed to fetch transactions");
         const transactions = await response.json();
         setData(transactions);
       } catch (error) {
-        setError("Error fetching transactions.");
+        setAlert({ type: "error", message: "Error fetching transactions." });
       } finally {
         setLoading(false);
       }
     };
-
     fetchTransactions();
   }, []);
 
-  // Handle Delete Transaction
   const handleDelete = async (id: string) => {
+    setDeletingId(id);
     try {
       const response = await fetch("/api/transactions", {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete transaction");
-      }
-
-      setData((prevData) =>
-        prevData.filter((transaction) => transaction._id !== id)
-      );
-      setAlert({
-        type: "success",
-        message: "Transaction deleted successfully!",
-      });
+      if (!response.ok) throw new Error("Failed to delete transaction");
+      setData((prev) => prev.filter((t) => t._id !== id));
+      toast.success("✅ Transaction deleted successfully!");
     } catch (error) {
-      setAlert({ type: "error", message: "Failed to delete transaction." });
+      toast.error("❌ Failed to delete transaction.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  // Handle Edit Transaction
-  const handleEditClick = (transaction: any) => {
+  const handleEditClick = (transaction: Transaction) => {
     setCurrentTransaction(transaction);
     setEditDialogOpen(true);
   };
 
-  // Handle Update Transaction
   const handleUpdate = async () => {
     if (!currentTransaction?._id) {
       toast.error("❌ Transaction ID is missing!");
       return;
     }
 
+    setSaving(true);
     const updatedTransactionData = {
       id: currentTransaction._id,
       name: currentTransaction.name,
@@ -138,36 +114,32 @@ export const TransactionTable = () => {
     try {
       const response = await fetch("/api/transactions", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedTransactionData),
       });
 
       const responseData = await response.json();
-
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(responseData.error || "Failed to update transaction");
-      }
 
-      setData((prevData) =>
-        prevData.map((t) => (t._id === responseData._id ? responseData : t))
+      setData((prev) =>
+        prev.map((t) => (t._id === responseData._id ? responseData : t))
       );
-
       toast.success("✅ Transaction updated successfully!");
       setEditDialogOpen(false);
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(`❌ Error: ${error.message}`);
-      } else {
-        toast.error("❌ An unknown error occurred.");
-      }
+      toast.error(
+        error instanceof Error
+          ? `❌ ${error.message}`
+          : "❌ An unknown error occurred."
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <div className="bg-card p-6 border border-secondary rounded-lg shadow-md">
-      {/* Show Alerts */}
       {alert && (
         <AlertMessage
           type={alert.type!}
@@ -186,7 +158,6 @@ export const TransactionTable = () => {
         <h2 className="text-xl font-semibold">Recent Transactions</h2>
       </div>
 
-      {/* Table Data */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -218,36 +189,44 @@ export const TransactionTable = () => {
                 {new Date(transaction.date).toLocaleDateString("en-GB")}
               </TableCell>
               <TableCell>{transaction.remarks}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              <TableCell className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0 hover:bg-muted"
+                  onClick={() => handleEditClick(transaction)}
+                >
+                  <Pencil className="size-4 text-primary" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0 hover:bg-muted"
+                  onClick={() =>
+                    toast.info("📄 Invoice generation is not implemented yet.")
+                  }
+                >
+                  <FileText className="size-4 text-primary" />
+                </Button>
+
+                <DeleteConfirmation
+                  title="Delete Transaction"
+                  description="Are you sure?"
+                  onConfirm={() => handleDelete(transaction._id)}
+                  // @ts-ignore for custom prop if needed
+                  triggerButton={
                     <Button
                       variant="ghost"
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 hover:bg-muted"
+                      disabled={deletingId === transaction._id}
                     >
-                      <MoreHorizontal />
+                      {deletingId === transaction._id ? (
+                        <Loader className="size-4 animate-spin text-red-500" />
+                      ) : (
+                        <Trash2 className="size-4 text-red-500" />
+                      )}
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() => handleEditClick(transaction)}
-                    >
-                      <Pencil className="size-4 mr-2" /> Edit Transaction
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <FileText className="size-4 mr-2 text-primary" /> Generate
-                      Invoice
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DeleteConfirmation
-                      triggerText="Delete Transaction"
-                      title="Delete Transaction"
-                      description="Are you sure?"
-                      onConfirm={() => handleDelete(transaction._id)}
-                    />
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  }
+                />
               </TableCell>
             </TableRow>
           ))}
@@ -269,10 +248,9 @@ export const TransactionTable = () => {
             name="name"
             value={currentTransaction?.name}
             onChange={(e) =>
-              setCurrentTransaction({
-                ...currentTransaction,
-                name: e.target.value,
-              })
+              setCurrentTransaction((prev) =>
+                prev ? { ...prev, name: e.target.value } : prev
+              )
             }
           />
 
@@ -282,10 +260,9 @@ export const TransactionTable = () => {
             type="number"
             value={currentTransaction?.amount}
             onChange={(e) =>
-              setCurrentTransaction({
-                ...currentTransaction,
-                amount: e.target.value,
-              })
+              setCurrentTransaction((prev) =>
+                prev ? { ...prev, amount: Number(e.target.value) } : prev
+              )
             }
           />
 
@@ -293,7 +270,9 @@ export const TransactionTable = () => {
           <Select
             value={currentTransaction?.type}
             onValueChange={(value) =>
-              setCurrentTransaction({ ...currentTransaction, type: value })
+              setCurrentTransaction((prev) =>
+                prev ? { ...prev, type: value as "credit" | "debit" } : prev
+              )
             }
           >
             <SelectTrigger className="w-full">
@@ -312,15 +291,25 @@ export const TransactionTable = () => {
             name="remarks"
             value={currentTransaction?.remarks}
             onChange={(e) =>
-              setCurrentTransaction({
-                ...currentTransaction,
-                remarks: e.target.value,
-              })
+              setCurrentTransaction((prev) =>
+                prev ? { ...prev, remarks: e.target.value } : prev
+              )
             }
           />
 
           <DialogFooter>
-            <Button onClick={handleUpdate}>Apply Changes</Button>
+            <Button
+              onClick={handleUpdate}
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <Loader className="size-4 mr-2 animate-spin" /> Saving...
+                </>
+              ) : (
+                "Apply Changes"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
