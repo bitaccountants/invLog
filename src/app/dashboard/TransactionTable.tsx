@@ -11,7 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pencil, Trash2, FileText, Loader } from "lucide-react";
-import { DeleteConfirmation } from "@/components/ui/DeleteConfirmation";
 import { AlertMessage } from "@/components/ui/AlertMessage";
 import {
   Dialog,
@@ -55,6 +54,10 @@ export const TransactionTable = () => {
     useState<Transaction | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 5;
+  const totalPages = Math.ceil(data.length / rowsPerPage);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -138,6 +141,12 @@ export const TransactionTable = () => {
     }
   };
 
+  // Calculate the visible rows for pagination
+  const paginatedData = data.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
   return (
     <div className="bg-card p-6 border border-secondary rounded-lg shadow-md">
       {alert && (
@@ -158,80 +167,119 @@ export const TransactionTable = () => {
         <h2 className="text-xl font-semibold">Recent Transactions</h2>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Amount (PKR)</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Remarks</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((transaction) => (
-            <TableRow key={transaction._id}>
-              <TableCell>{transaction.name}</TableCell>
-              <TableCell
-                className={
-                  transaction.type === "credit"
-                    ? "text-green-500"
-                    : "text-red-500"
-                }
-              >
-                {transaction.type}
-              </TableCell>
-              <TableCell>
-                PKR {new Intl.NumberFormat("en-PK").format(transaction.amount)}
-              </TableCell>
-              <TableCell>
-                {new Date(transaction.date).toLocaleDateString("en-GB")}
-              </TableCell>
-              <TableCell>{transaction.remarks}</TableCell>
-              <TableCell className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-muted"
-                  onClick={() => handleEditClick(transaction)}
-                >
-                  <Pencil className="size-4 text-primary" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-muted"
-                  onClick={() =>
-                    toast.info("📄 Invoice generation is not implemented yet.")
-                  }
-                >
-                  <FileText className="size-4 text-primary" />
-                </Button>
-
-                <DeleteConfirmation
-                  title="Delete Transaction"
-                  description="Are you sure?"
-                  onConfirm={() => handleDelete(transaction._id)}
-                  // @ts-ignore for custom prop if needed
-                  triggerButton={
-                    <Button
-                      variant="ghost"
-                      className="h-8 w-8 p-0 hover:bg-muted"
-                      disabled={deletingId === transaction._id}
+      {/* Loading Spinner */}
+      {loading ? (
+        <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+          <Loader className="size-5 animate-spin" /> Loading recent
+          transactions...
+        </div>
+      ) : (
+        <>
+          <Table className="text-base">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Amount (PKR)</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Remarks</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-10 text-muted-foreground"
+                  >
+                    No transactions to show. Please add some transactions to see
+                    them here.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedData.map((transaction) => (
+                  <TableRow key={transaction._id}>
+                    <TableCell>{transaction.name}</TableCell>
+                    <TableCell
+                      className={
+                        transaction.type === "credit"
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }
                     >
+                      {transaction.type}
+                    </TableCell>
+                    <TableCell>
+                      PKR{" "}
+                      {new Intl.NumberFormat("en-PK").format(
+                        transaction.amount
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(transaction.date).toLocaleDateString("en-GB")}
+                    </TableCell>
+                    <TableCell>{transaction.remarks}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {/* Edit Icon */}
+                      <Pencil
+                        className="size-4 text-primary cursor-pointer hover:text-blue-500"
+                        onClick={() => handleEditClick(transaction)}
+                      />
+
+                      {/* Invoice Icon */}
+                      <FileText
+                        className="size-4 text-primary cursor-pointer hover:text-blue-500"
+                        onClick={() =>
+                          toast.info(
+                            "📄 Invoice generation is not implemented yet."
+                          )
+                        }
+                      />
+                      {/* Delete Icon */}
                       {deletingId === transaction._id ? (
                         <Loader className="size-4 animate-spin text-red-500" />
                       ) : (
-                        <Trash2 className="size-4 text-red-500" />
+                        <Trash2
+                          className="size-4 text-red-500 cursor-pointer hover:text-red-600"
+                          onClick={() => handleDelete(transaction._id)}
+                        />
                       )}
-                    </Button>
-                  }
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between py-4">
+            <div className="text-sm text-muted-foreground">
+              {paginatedData.length} of {data.length} row(s) showing.
+            </div>
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Edit Transaction Dialog */}
       <Dialog
