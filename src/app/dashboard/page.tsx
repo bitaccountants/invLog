@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
 
 type Transaction = {
   _id?: string;
@@ -68,6 +69,8 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [addButtonLoading, setAddButtonLoading] = useState(false);
 
   const rowsPerPage = 5;
   const totalPages = Math.ceil(transactions.length / rowsPerPage);
@@ -86,7 +89,7 @@ export default function Dashboard() {
       const res = await fetch("/api/transactions");
       const data = await res.json();
       setTransactions(data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch transactions.");
     } finally {
       setLoading(false);
@@ -109,6 +112,7 @@ export default function Dashboard() {
       toast.error("Please fill all required fields!");
       return;
     }
+    setSaving(true);
     try {
       const res = await fetch("/api/transactions", {
         method: "POST",
@@ -118,14 +122,16 @@ export default function Dashboard() {
       const data = await res.json();
       if (res.ok) {
         setTransactions([data, ...transactions]);
-        toast.success("Transaction added!");
-        setOpen(false);
+        setTimeout(() => setOpen(false), 500); // Small delay for UX
+        toast.success("Transaction added successfully.");
         setNewTransaction({ name: "", amount: 0, type: "credit" });
       } else {
         toast.error(data.error || "Failed to add transaction.");
       }
     } catch {
       toast.error("Error adding transaction.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -158,7 +164,14 @@ export default function Dashboard() {
       const res = await fetch("/api/transactions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(currentTransaction),
+        body: JSON.stringify({
+          id: currentTransaction._id,
+          name: currentTransaction.name,
+          amount: currentTransaction.amount,
+          type: currentTransaction.type,
+          remarks: currentTransaction.remarks,
+          date: currentTransaction.date,
+        }),
       });
       const updated = await res.json();
       if (res.ok) {
@@ -187,7 +200,7 @@ export default function Dashboard() {
 
   return (
     <div className="container py-12 space-y-10">
-      {/* Stats Row */}
+      {/* Stats */}
       <div className="px-4 md:px-8 space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-semibold">Financial Overview</h1>
@@ -196,45 +209,46 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="shadow-lg border rounded-2xl p-6 bg-card text-foreground">
-            <CardHeader className="flex justify-between items-center pb-2">
-              <CardTitle className="text-lg">Net Balance</CardTitle>
-              <div className="p-3 rounded-full bg-primary/10">
-                {<FileText className="text-primary size-6" />}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-3xl font-bold">
-                PKR {totalBalance.toLocaleString()}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-lg border rounded-2xl p-6 bg-card text-foreground">
-            <CardHeader className="flex justify-between items-center pb-2">
-              <CardTitle className="text-lg">Receivables</CardTitle>
-              <div className="p-3 rounded-full bg-green-100">
-                {<ArrowUp className="text-green-500 size-6" />}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-3xl font-bold">
-                PKR {receivables.toLocaleString()}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-lg border rounded-2xl p-6 bg-card text-foreground">
-            <CardHeader className="flex justify-between items-center pb-2">
-              <CardTitle className="text-lg">Payables</CardTitle>
-              <div className="p-3 rounded-full bg-red-100">
-                {<ArrowDown className="text-red-500 size-6" />}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-3xl font-bold">
-                PKR {payables.toLocaleString()}
-              </p>
-            </CardContent>
-          </Card>
+          {[
+            {
+              label: "Net Balance",
+              value: totalBalance,
+              icon: <FileText className="text-primary size-6" />,
+            },
+            {
+              label: "Receivables",
+              value: receivables,
+              icon: <ArrowUp className="text-green-500 size-6" />,
+            },
+            {
+              label: "Payables",
+              value: payables,
+              icon: <ArrowDown className="text-red-500 size-6" />,
+            },
+          ].map((stat, idx) => (
+            <Card
+              key={idx}
+              className="shadow-lg border rounded-2xl p-6 bg-card text-foreground"
+            >
+              <CardHeader className="flex justify-between items-center pb-2">
+                <CardTitle className="text-lg">{stat.label}</CardTitle>
+                <div className="p-3 rounded-full bg-primary/10">
+                  {stat.icon}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader className="size-5 animate-spin" /> Loading...
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-3xl font-bold">
+                    {stat.value.toLocaleString()}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
@@ -255,7 +269,7 @@ export default function Dashboard() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Amount (PKR)</TableHead>
+                  <TableHead>Amount</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Remarks</TableHead>
                   <TableHead>Actions</TableHead>
@@ -274,21 +288,43 @@ export default function Dashboard() {
                 ) : (
                   paginatedData.map((t) => (
                     <TableRow key={t._id}>
-                      <TableCell>{t.name}</TableCell>
+                      {/* Truncated Cells */}
                       <TableCell
-                        className={
+                        className="max-w-[200px] truncate"
+                        title={t.name}
+                      >
+                        {t.name}
+                      </TableCell>
+                      <TableCell
+                        className={`max-w-[100px] truncate ${
                           t.type === "credit"
                             ? "text-green-500"
                             : "text-red-500"
-                        }
+                        }`}
+                        title={t.type}
                       >
                         {t.type}
                       </TableCell>
-                      <TableCell>PKR {t.amount.toLocaleString()}</TableCell>
-                      <TableCell>
-                        {new Date(t.date || "").toLocaleDateString("en-GB")}
+                      <TableCell
+                        className="max-w-[150px] truncate"
+                        title={`${t.amount.toLocaleString()}`}
+                      >
+                        {t.amount.toLocaleString()}
                       </TableCell>
-                      <TableCell>{t.remarks}</TableCell>
+                      <TableCell
+                        className="max-w-[180px] truncate"
+                        title={formatDateTime(t.date)}
+                      >
+                        {formatDateTime(t.date)}
+                      </TableCell>
+                      <TableCell
+                        className="max-w-[250px] truncate"
+                        title={t.remarks}
+                      >
+                        {t.remarks}
+                      </TableCell>
+
+                      {/* Actions */}
                       <TableCell className="flex gap-2">
                         <Pencil
                           className="cursor-pointer"
@@ -324,7 +360,7 @@ export default function Dashboard() {
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || paginatedData.length === 0}
                 >
                   Previous
                 </Button>
@@ -334,7 +370,9 @@ export default function Dashboard() {
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
-                  disabled={currentPage === totalPages}
+                  disabled={
+                    currentPage === totalPages || paginatedData.length === 0
+                  }
                 >
                   Next
                 </Button>
@@ -346,10 +384,17 @@ export default function Dashboard() {
 
       {/* Floating Add Button */}
       <Button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+        }}
+        disabled={addButtonLoading}
         className="fixed bottom-6 right-6 size-14 rounded-full shadow-md flex items-center justify-center"
       >
-        <Plus className="size-6" />
+        {addButtonLoading ? (
+          <Loader className="animate-spin size-5" />
+        ) : (
+          <Plus className="size-6" />
+        )}
       </Button>
 
       {/* Add Transaction Dialog */}
@@ -364,11 +409,11 @@ export default function Dashboard() {
           <div className="grid gap-4">
             <Label>Transaction Name</Label>
             <Input
-              name="name"
               value={newTransaction.name}
               onChange={(e) =>
                 setNewTransaction({ ...newTransaction, name: e.target.value })
               }
+              disabled={saving}
             />
             <Label>Amount</Label>
             <Input
@@ -380,6 +425,7 @@ export default function Dashboard() {
                   amount: +e.target.value,
                 })
               }
+              disabled={saving}
             />
             <Label>Type</Label>
             <Select
@@ -390,8 +436,9 @@ export default function Dashboard() {
                   type: val as "credit" | "debit",
                 })
               }
+              disabled={saving}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Type" />
               </SelectTrigger>
               <SelectContent>
@@ -408,15 +455,25 @@ export default function Dashboard() {
                   remarks: e.target.value,
                 })
               }
+              disabled={saving}
             />
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveTransaction}>Save Transaction</Button>
+            <Button
+              onClick={handleSaveTransaction}
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader className="size-4 animate-spin mr-2" />
+              ) : (
+                "Save Transaction"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
+      {/* Edit Transaction Dialog */}
       <Dialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
@@ -453,7 +510,7 @@ export default function Dashboard() {
               )
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Type" />
             </SelectTrigger>
             <SelectContent>
