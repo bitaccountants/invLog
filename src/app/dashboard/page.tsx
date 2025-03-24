@@ -42,6 +42,13 @@ import {
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/utils";
 import { jsPDF } from "jspdf";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Share, Download, Paperclip } from "lucide-react";
 
 type Transaction = {
   _id?: string;
@@ -236,6 +243,18 @@ export default function Dashboard() {
     toast.success("Invoice ready!.");
   };
 
+  const exportAllTransactions = () => {
+    alert("Exporting all transactions...");
+  };
+
+  const addNote = (transaction: Transaction) => {
+    alert("Adding note to transaction...");
+  };
+
+  const shareTransaction = (transaction: Transaction) => {
+    alert("shared...");
+  };
+
   const paginatedData = transactions.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
@@ -371,27 +390,66 @@ export default function Dashboard() {
                       </TableCell>
 
                       {/* Actions */}
-                      <TableCell className="flex gap-3">
-                        <Pencil
-                          className="cursor-pointer"
-                          onClick={() => {
-                            setCurrentTransaction(t);
-                            setEditDialogOpen(true);
-                          }}
-                        />
-                        {deletingId === t._id ? (
-                          <Loader className="size-4 animate-spin text-red-500" />
-                        ) : (
-                          <Trash2
-                            className="cursor-pointer text-red-500"
-                            onClick={() => handleDelete(t._id)}
-                          />
-                        )}
-                        <FileText
-                          className="cursor-pointer text-blue-500"
-                          onClick={() => generateInvoice(t)}
-                          title="Generate Invoice"
-                        />
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="focus:outline-none">
+                            <MoreHorizontal className="cursor-pointer" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {/* Edit */}
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setCurrentTransaction(t);
+                                setEditDialogOpen(true);
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <Pencil className="w-4 h-4 text-yellow-500" />{" "}
+                              Edit
+                            </DropdownMenuItem>
+
+                            {/* Delete */}
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(t._id)}
+                              className="flex items-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" /> Delete
+                            </DropdownMenuItem>
+
+                            {/* Invoice */}
+                            <DropdownMenuItem
+                              onClick={() => generateInvoice(t)}
+                              className="flex items-center gap-2"
+                            >
+                              <FileText className="w-4 h-4 text-blue-500" />{" "}
+                              Generate Invoice
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => shareTransaction(t)}
+                              className="flex items-center gap-2"
+                            >
+                              <Share className="w-4 h-4 text-purple-500" />{" "}
+                              Share / Download PDF
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={exportAllTransactions}
+                              className="flex items-center gap-2"
+                            >
+                              <Download className="w-4 h-4 text-green-600" />{" "}
+                              Export All Transactions
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => addNote(t)}
+                              className="flex items-center gap-2"
+                            >
+                              <Paperclip className="w-4 h-4 text-gray-500" />{" "}
+                              Add Note / Attachment
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
