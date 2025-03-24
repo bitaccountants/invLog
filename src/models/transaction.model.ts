@@ -8,6 +8,7 @@ export interface ITransaction extends Document {
   amount: number;
   date: Date;
   remarks?: string;
+  sharedId?: string;
 }
 
 // Define Transaction Schema
@@ -24,6 +25,7 @@ const TransactionSchema = new Schema<ITransaction>(
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
     remarks: { type: String },
+    sharedId: { type: String, unique: true, sparse: true }, 
   },
   { timestamps: true }
 );

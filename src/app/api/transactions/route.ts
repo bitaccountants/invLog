@@ -67,7 +67,8 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, name, type, amount, date, remarks } = await req.json();
+    const { id, name, type, amount, date, remarks, sharedId } =
+      await req.json();
     if (!id) {
       return NextResponse.json(
         { error: "Missing transaction ID" },
@@ -77,7 +78,7 @@ export async function PATCH(req: NextRequest) {
 
     const updatedTransaction = await Transaction.findOneAndUpdate(
       { _id: id, userId },
-      { name, type, amount, date, remarks },
+      { name, type, amount, date, remarks, sharedId },
       { new: true }
     );
 
