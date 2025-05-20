@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectToDB } from "@/lib/db";
-import { Transaction } from "@/models/transaction.model";
+import { connectToDB, prisma } from "@/lib/db";
 
 export async function GET(
   _: any,
@@ -8,13 +7,13 @@ export async function GET(
 ) {
   try {
     await connectToDB();
-    const transaction = await Transaction.findOne({
-      sharedId: params.sharedId,
+    const transaction = await prisma.transaction.findFirst({
+      where: { sharedId: params.sharedId },
     });
     if (!transaction)
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
-    return NextResponse.json(transaction, { status: 200 });
+    return NextResponse.json({ ...transaction, _id: transaction.id }, { status: 200 });
   } catch (err) {
     console.error("Error fetching shared transaction", err);
     return NextResponse.json({ error: "Server Error" }, { status: 500 });

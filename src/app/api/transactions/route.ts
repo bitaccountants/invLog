@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectToDB } from "@/lib/db";
-import { Transaction } from "@/models/transaction.model";
+import { connectToDB, prisma } from "@/lib/db";
 import { getAuth } from "@clerk/nextjs/server";
 
 // ✅ **Fetch All Transactions (GET)**
@@ -13,11 +12,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const transactions = await Transaction.find({ userId }).sort({
-      createdAt: -1,
+    const transactions = await prisma.transaction.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(transactions, { status: 200 });
+    const result = transactions.map((t) => ({ ...t, _id: t.id }));
+
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return NextResponse.json(
@@ -45,9 +47,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const newTransaction = await Transaction.create({ ...body, userId });
+    const newTransaction = await prisma.transaction.create({
+      data: { ...body, userId },
+    });
 
-    return NextResponse.json(newTransaction, { status: 201 });
+    return NextResponse.json({ ...newTransaction, _id: newTransaction.id }, { status: 201 });
   } catch (error) {
     console.error("Error creating transaction:", error);
     return NextResponse.json(
@@ -76,20 +80,20 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const updatedTransaction = await Transaction.findOneAndUpdate(
-      { _id: id, userId },
-      { name, type, amount, date, remarks, sharedId },
-      { new: true }
-    );
-
-    if (!updatedTransaction) {
+    const existing = await prisma.transaction.findFirst({ where: { id, userId } });
+    if (!existing) {
       return NextResponse.json(
         { error: "Transaction not found or unauthorized" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(updatedTransaction, { status: 200 });
+    const updatedTransaction = await prisma.transaction.update({
+      where: { id },
+      data: { name, type, amount, date, remarks, sharedId },
+    });
+
+    return NextResponse.json({ ...updatedTransaction, _id: updatedTransaction.id }, { status: 200 });
   } catch (error) {
     console.error("Error updating transaction:", error);
     return NextResponse.json(
@@ -112,12 +116,11 @@ export async function DELETE(req: NextRequest) {
     const { id, ids } = await req.json();
 
     if (id) {
-      const deletedTransaction = await Transaction.findOneAndDelete({
-        _id: id,
-        userId,
+      const result = await prisma.transaction.deleteMany({
+        where: { id, userId },
       });
 
-      if (!deletedTransaction) {
+      if (result.count === 0) {
         return NextResponse.json(
           { error: "Transaction not found or unauthorized" },
           { status: 404 }
@@ -129,12 +132,11 @@ export async function DELETE(req: NextRequest) {
         { status: 200 }
       );
     } else if (ids && Array.isArray(ids) && ids.length > 0) {
-      const result = await Transaction.deleteMany({
-        _id: { $in: ids },
-        userId,
+      const result = await prisma.transaction.deleteMany({
+        where: { id: { in: ids }, userId },
       });
 
-      if (result.deletedCount === 0) {
+      if (result.count === 0) {
         return NextResponse.json(
           { error: "No transactions deleted" },
           { status: 404 }
@@ -142,7 +144,7 @@ export async function DELETE(req: NextRequest) {
       }
 
       return NextResponse.json(
-        { message: `${result.deletedCount} transactions deleted successfully` },
+        { message: `${result.count} transactions deleted successfully` },
         { status: 200 }
       );
     } else {
