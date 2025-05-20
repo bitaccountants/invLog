@@ -1,0 +1,28 @@
+// Prisma schema for Postgres
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  credit
+  debit
+}
+
+model Transaction {
+  id        String          @id @default(uuid())
+  userId    String
+  name      String
+  type      TransactionType
+  amount    Float
+  date      DateTime        @default(now())
+  remarks   String?
+  sharedId  String?         @unique
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
