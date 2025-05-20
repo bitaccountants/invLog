@@ -5,7 +5,7 @@ import { Menu, Sun, Moon, Github } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,6 +14,7 @@ export const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const { data: session } = useSession();
   const pathname = usePathname();
 
   // Scroll detection for auto-hide/show navbar
@@ -51,7 +52,7 @@ export const Navbar = () => {
 
       {/* Desktop Navigation */}
       <nav className="hidden lg:flex items-center gap-4">
-        <SignedIn>
+        {session && (
           <Link
             href="/dashboard"
             className={`text-lg font-medium hover:text-primary transition ${
@@ -60,7 +61,7 @@ export const Navbar = () => {
           >
             Dashboard
           </Link>
-        </SignedIn>
+        )}
 
         {/* Theme Toggle */}
         <Button
@@ -90,21 +91,16 @@ export const Navbar = () => {
         </Button>
 
         {/* Auth */}
-        <SignedOut>
-          <Button asChild>
-            <Link href="/login">Login</Link>
+        {!session ? (
+          <>
+            <Button onClick={() => signIn("github")}>Login</Button>
+            <Button variant="outline" onClick={() => signIn("github")}>Register</Button>
+          </>
+        ) : (
+          <Button variant="ghost" onClick={() => signOut({ callbackUrl: "/" })}>
+            Logout
           </Button>
-          <Button
-            asChild
-            variant="outline"
-          >
-            <Link href="/register">Register</Link>
-          </Button>
-        </SignedOut>
-
-        <SignedIn>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
+        )}
       </nav>
 
       {/* Mobile Navigation */}
@@ -149,21 +145,16 @@ export const Navbar = () => {
 
             {/* Auth Buttons */}
             <div className="p-4 border-t border-secondary flex items-center gap-4">
-              <SignedOut>
-                <Button asChild>
-                  <Link href="/login">Login</Link>
+              {!session ? (
+                <>
+                  <Button onClick={() => signIn("github")}>Login</Button>
+                  <Button variant="outline" onClick={() => signIn("github")}>Register</Button>
+                </>
+              ) : (
+                <Button variant="ghost" onClick={() => signOut({ callbackUrl: "/" })}>
+                  Logout
                 </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                >
-                  <Link href="/register">Register</Link>
-                </Button>
-              </SignedOut>
-
-              <SignedIn>
-                <UserButton afterSignOutUrl="/" />
-              </SignedIn>
+              )}
             </div>
           </SheetContent>
         </Sheet>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,7 +66,8 @@ interface jsPDFWithAutoTable extends jsPDF {
 }
 
 export default function Dashboard() {
-  const { isSignedIn } = useUser();
+  const { data: session, status } = useSession();
+  const isSignedIn = status === "authenticated";
   const router = useRouter();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -90,8 +91,8 @@ export default function Dashboard() {
   const totalPages = Math.ceil(transactions.length / rowsPerPage);
 
   useEffect(() => {
-    if (!isSignedIn) router.push("/login");
-  }, [isSignedIn, router]);
+    if (status === "unauthenticated") router.push("/login");
+  }, [status, router]);
 
   useEffect(() => {
     fetchTransactions();
@@ -307,7 +308,7 @@ export default function Dashboard() {
     currentPage * rowsPerPage
   );
 
-  if (!isSignedIn)
+  if (status !== "authenticated")
     return <div className="text-center mt-10">Redirecting...</div>;
 
   return (
