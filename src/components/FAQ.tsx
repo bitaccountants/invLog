@@ -38,7 +38,7 @@ const FAQList: FAQProps[] = [
   },
   {
     question: "Do I need to sign up?",
-    answer: "Yes, PayLog uses Clerk authentication to keep your data secure.",
+    answer: "Yes, PayLog uses NextAuth to keep your data secure.",
     value: "item-5",
   },
 ];

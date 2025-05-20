@@ -36,7 +36,7 @@ const featureList: FeaturesProps[] = [
     icon: "ShieldCheck",
     title: "Secure & Private",
     description:
-      "PayLog uses Clerk authentication and encryption to protect your data.",
+      "PayLog uses NextAuth for authentication and encryption to protect your data.",
   },
   {
     icon: "Smartphone",

@@ -1,12 +1,13 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectToDB, prisma } from "@/lib/db";
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 
 // ✅ **Fetch All Transactions (GET)**
 export async function GET(req: NextRequest) {
   try {
     await connectToDB();
-    const { userId } = getAuth(req);
+    const session = await auth();
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,7 +34,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await connectToDB();
-    const { userId } = getAuth(req);
+    const session = await auth();
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -65,7 +67,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     await connectToDB();
-    const { userId } = getAuth(req);
+    const session = await auth();
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -107,7 +110,8 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     await connectToDB();
-    const { userId } = getAuth(req);
+    const session = await auth();
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
